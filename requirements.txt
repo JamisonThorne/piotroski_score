@@ -1,0 +1,7 @@
+certifi==2017.7.27.1
+chardet==3.0.4
+chromedriver==2.24.1
+idna==2.5
+requests==2.18.3
+selenium==3.5.0
+urllib3==1.22

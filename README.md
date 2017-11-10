@@ -23,7 +23,8 @@ F_ROA:
     Morning Star: Financials > Income Statement > Total Operating Expenses > Net Income
                   Financials > Balance Sheet > Total Assets
                   
-    Equations: Return on Assets = (This Year) / Total Assets (This Year)
+    Equations: Return on Assets = Net Income (This Year) / Total Assets (This Year)
+
 F_DeltaROA:
         Purpose: Current Profitability and Cash flow realizations provide information about the firm's ability to generate 
                  funds internally. Given the poor historical earnings performance of value firms, 
@@ -103,7 +104,7 @@ F_DeltaLever:
             
             Definition: Captures changes in firm's long-term debt levels.
             
-                        The indicator variable DeltaLever equals one (zero) if the 
+                        F_DeltaLever equals one (zero) if the 
                         firm's leverage ratio fell (rose) in the year proceding portfolio 
                         formation.
                         
@@ -117,19 +118,19 @@ F_DeltaLiquid:
             Purpose: Piotroski assumes that an improvement in liquidty is a good 
                      signal about the firm's ability to service current debt obligations
             
-            Definition: DeltaLiquid measures the Historical changei n the firm's current 
+            Definition: DeltaLiquid measures the Historical change in the firm's current 
                         ratio between the current and prior year. The current 
                         ratio is the ratio of current assets to current liabilities 
                         at fiscal year-end. 
                         
-                        The indication variable DeltaLiquid equals one if the firm's 
+                        F_DeltaLiquid equals one if the firm's 
                         liquidity improved, zero otherwise.
                         
             Morning Star: Financials > Balance Sheet > Total Current Liabilities
                           Financials > Balance Sheet > Total Current Assets
                 
             Equations: Current Ratio = Total Current Assets / Total Current Liabilities
-                       DeltaLiquid = Compare Current Ratio (This Year) to Current Ratio (Last Year)      
+                       DeltaLiquid = Current Ratio (This Year) - Current Ratio (Last Year)      
 EQ_OFFER:   
         Purpose: Similar to an increase in long-term debt, financially distressed 
                   firms that raise external capital could be signaling their inability 

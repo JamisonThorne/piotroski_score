@@ -40,15 +40,23 @@ def main():
         # https://stackoverflow.com/questions/22476112/using-chromedriver-with-selenium-python-ubuntu
         logging.info(index)
         logging.info(row)
-        temp.append([df.iloc[index,0], Parse(driver, df.iloc[index,0])])
+        temp.append([df.iloc[index,0], parse(driver, df.iloc[index,0])])
     driver.close()
     df = pd.DataFrame(temp, columns=['Symbol', 'fscore'])
     df.to_csv('fscore.csv', index=False, sep='\t')
     logging.info("fin")
 
+"""
+init_driver(str) -> selenium.webdriver.chrome.webdriver.WebDriver (session="unique crumb")
 
+creates the selenium webdriver that this code will navigate through.
+
+>>> init_driver('/home/jonsnow/my_stockproject/chromedriver-Linux64')
+selenium.webdriver.chrome.webdriver.WebDriver (session="unique crumb")
+"""
 def init_driver(web_driver_location):
     options = Options()
+    #maximizes the webdriver screen so that the entire webpage can be searched and clicked on.
     options.add_argument("--start-maximized")
     options.add_argument('--dns-prefetch-disable')
     driver = webdriver.Chrome(executable_path=web_driver_location, chrome_options=options)
@@ -63,12 +71,18 @@ def parse_args():
     parser.add_argument('-v', '--verbose', help='Verbose logging', action="store_true")
     return parser.parse_args()
 
-'''
-Parse driver content for stock data
->>>Parse(driver, empty)
+"""
+parse(selenium.webdriver.chrome.webdriver.WebDriver, str) -> int
 
-'''
-def Parse(driver, stock):
+navigates through the morningstar financials pages for any given stock financial data and calculates the
+priotroski score.
+
+>>> parse(driver, "AMD")
+4
+>>> parse(driver, "NVDA")
+6
+"""
+def parse(driver, stock):
     logger.debug("Starting Parse method")
     try:
         #driver.get('http://www.morningstar.com/stocks/xnas/{stock_var}/quote.html'.format(stock_var=stock))
@@ -185,80 +199,89 @@ def Parse(driver, stock):
         return sum(f_score)
 
 
+"""
+exception_handling_text_element(str, selenium.webdriver.chrome.webdriver.WebDriver) -> str
+
+checks to see if an exception was thrown when searching for a text formatted element. If no exception was found
+then return text element, else return 0.
+
+>>> find_element_by_xpath('//*[@id="tab-profitability"]/table[1]/tbody/tr[6]/td[10]', driver)
+Most recent Gross Margin data
+>>> find_element_by_xpath('//*[@id="financials"]/table/tbody/tr[10]/td[10]', driver)
+Most recent Net Income data
+"""
 def exception_handling_text_element(text_element, driver):
-    """
-    (str, selenium.webdriver.chrome.webdriver.WebDriver) -> str
-
-    Checks to see if an exception was thrown when searching for a text formatted element. If no exception was found
-    then return text element, else return 0.
-
-    >>> find_element_by_xpath('//*[@id="tab-profitability"]/table[1]/tbody/tr[6]/td[10]', driver)
-    Most recent Gross Margin data
-    >>> find_element_by_xpath('//*[@id="financials"]/table/tbody/tr[10]/td[10]', driver)
-    Most recent Net Income data
-    """
     try:
         return driver.find_element_by_xpath(text_element).text
     except NoSuchElementException:
         return 0
 
 
+"""
+exception_handling_raw_element(str, selenium.webdriver.chrome.webdriver.WebDriver) -> str
+
+checks to see if an exception was thrown when searching for a raw formatted element. If no exception was thrown
+then return raw element, else return zero.
+
+>>> find_element_by_xpath('//*[@id="data_i1"]/div[@id="Y_5"]', driver)
+Most Recent Revenue
+>>> find_element_by_xpath('//*[@id="data_ttg1"]/div[@id="Y_5"]', driver))
+Most Recent Total Current Assets
+"""
 def exception_handling_raw_element(raw_element, driver):
-    """
-    (str, selenium.webdriver.chrome.webdriver.WebDriver) -> str
-
-    Checks to see if an exception was thrown when searching for a raw formatted element. If no exception was thrown
-    then return raw element, else return zero.
-
-    >>> find_element_by_xpath('//*[@id="data_i1"]/div[@id="Y_5"]', driver)
-    Most Recent Revenue
-    >>> find_element_by_xpath('//*[@id="data_ttg1"]/div[@id="Y_5"]', driver))
-    Most Recent Total Current Assets
-    """
     try:
         return driver.find_element_by_xpath(raw_element).get_attribute("rawvalue")
     except NoSuchElementException:
         return 0
 
+"""
+float_converter(str) -> float
 
+converts xpath_to_data from a string to float. xpath_to_data equals a number represented as a string, dash, or zero 
+depending on what data was pulled from a given webpage.
+
+>>> float_converter(exception_handling_text_element('//*[@id="financials"]/table/tbody/tr[10]/td[10]', driver))
+2.0
+>>> float_converter(exception_handling_raw_element('//*[@id="data_ttg1"]/div[@id="Y_5"]', driver))
+0.0
+"""
 def float_converter(xpath_to_data):
-
     if xpath_to_data == "—":
-        return 0
+        return 0.0
     elif xpath_to_data == 0:
-        return 0
+        return 0.0
     else:
         return float(xpath_to_data.replace(",", ""))
 
 
+"""
+division_by_zero_check(float, float) -> float
+
+Checks to see if the denominator is 0. If true, 0 is returned else return the division of numerator and denominator.
+
+>>> division_by_zero_check(1, 0)
+0
+>>> division_by_zero_check(2,1)
+2
+"""
 def division_by_zero_check(numerator, denominator):
-    """
-    (float, float) -> float
-
-    Checks to see if the denominator is 0. If true, 0 is returned else return the division of numerator and denominator.
-
-    >>> division_by_zero_check(1, 0)
-    0
-    >>> division_by_zero_check(2,1)
-    2
-    """
     if denominator == 0:
         return 0
     else:
         return numerator / denominator
 
 
+"""
+human_like_click(selenium.webdriver.chrome.webdriver.WebDriver, selenium.webdriver.support.wait.WebDriverWait, str) -> None
+
+Waits for the location where the next click is going to take place to appear and then clicks that location.
+
+>>> human_like_click(driver, wait, '//*[@id="keyStatWrap"]/div/ul/li[5]/a')
+None
+>>> human_like_click(driver, wait, '/html/body/div[1]/div[3]/div[1]/div/ul[2]/li[6]/a')
+None
+"""
 def human_like_click(driver, wait, click_xpath):
-    """
-    (selenium.webdriver.chrome.webdriver.WebDriver, selenium.webdriver.support.wait.WebDriverWait, str) -> None
-
-    Waits for the location where the next click is going to take place to appear and then clicks that location.
-
-    >>> human_like_click(driver, wait, '//*[@id="keyStatWrap"]/div/ul/li[5]/a')
-    None
-    >>> human_like_click(driver, wait, '/html/body/div[1]/div[3]/div[1]/div/ul[2]/li[6]/a')
-    None
-    """
     try:
         #wait.until's for the click location to load
         wait.until(EC.presence_of_element_located((By.XPATH, click_xpath)))
@@ -273,36 +296,36 @@ def human_like_click(driver, wait, click_xpath):
                      .format(error=e, name="Jamison",num=20))
 
 
+"""
+sign_check(float) -> int
+
+Checks to see if pos_or_neg is great than 0. If yes, returns a 1 else returns 0.
+
+>>> 2.0
+1
+>>> -1.0
+0
+"""
 def sign_check(pos_or_neg):
-    """
-    (float) -> int
-
-    Checks to see if pos_or_neg is great than 0. If yes, returns a 1 else returns 0.
-
-    >>> 2.0
-    1
-    >>> -1.0
-    0
-    """
     if pos_or_neg > 0:
         return 1
     else:
         return 0
 
 
+"""
+csv_creator(str, bool) -> None
+
+converts a csv url into a csv file
+
+>>> csv_creator("http://www.nasdaq.com/screening/companies-by-name.aspx?letter=0&exchange=nyse&render=
+                download",True)
+None
+>>> csv_creator("http://www.nasdaq.com/screening/companies-by-name.aspx?letter=0&exchange=nyse&render=
+                download",False)
+None
+"""
 def csv_creator(url_link, header_setting):
-    """
-    (str, bool) -> None
-
-    converts a csv url into a csv file
-
-    >>> csv_creator("http://www.nasdaq.com/screening/companies-by-name.aspx?letter=0&exchange=nyse&render=
-                    download",True)
-    None
-    >>> csv_creator("http://www.nasdaq.com/screening/companies-by-name.aspx?letter=0&exchange=nyse&render=
-                    download",False)
-    None
-    """
     #creates a dataframe that contains the url_link provided to the function
     df = pd.read_csv(urlread_keep_trying(url_link))
     #creates stocklist.csv. If header_setting is true then a header will be created titled "Symbol" else, no header.
@@ -310,18 +333,18 @@ def csv_creator(url_link, header_setting):
               header=header_setting, index_label='Symbol')
 
 
+"""
+urlread_keep_trying(str) -> None
+
+uses urlopen to access a given url and error handles any exception encountered.
+Tries again 3 times if exceptions are met.
+
+>>> urlread_keep_trying("http://www.nasdaq.com/screening/companies-by-name.aspx?letter=0&exchange=amax&render=download")
+None
+>>> urlread_keep_trying("http://www.nasdaq.com/screening/companies-by-name.aspx?letter=0&exchange=nyse&render=download")
+None
+"""
 def urlread_keep_trying(url):
-    """
-    (str) -> None
-
-    uses urlopen to access a given url and error handles any exception encountered.
-    Tries again 3 times if exceptions are met.
-
-    >>> urlread_keep_trying("http://www.nasdaq.com/screening/companies-by-name.aspx?letter=0&exchange=amax&render=download")
-    None
-    >>> urlread_keep_trying("http://www.nasdaq.com/screening/companies-by-name.aspx?letter=0&exchange=nyse&render=download")
-    None
-    """
     for i in range(3):
         try:
             return urlopen(url)

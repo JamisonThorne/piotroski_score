@@ -17,7 +17,7 @@ import os.path
 def main():
     args = parse_args()
     logging.basicConfig(format='%(asctime)s - %(name)s : %(levelname)s - %(lineno)d: %(message)s',
-                        level=logging.DEBUG if args.verbose else logging.DEBUG)
+                        level=logging.DEBUG if args.verbose else logging.INFO)
     global logger
     logger = logging.getLogger("webscraper")
     if os.path.exists("stocklist.csv"):
@@ -31,7 +31,7 @@ def main():
     df = pd.read_csv('stocklist.csv')
     df_new = df[~df['Symbol'].str.contains('\w+\W')]
     df_new.to_csv('fscore.csv', columns=['Symbol','F_Score'], index=True, mode='a', header=None)
-    df_fscore = pd.read_csv('fscore.csv', names=['Symbol', 'F_Score'])
+    df_fscore = pd.read_csv('fscore.csv', names=['Symbol', 'F_Score'], nrows=1)
     temp = []
     driver = init_driver('/home/jonsnow/my_stockproject/chromedriver-Linux64')
     for index, row in df_fscore.iterrows():
@@ -185,32 +185,17 @@ def Parse(driver, stock):
         return sum(f_score)
 
 
-def division_by_zero_check(numerator, denominator):
-    """
-    (int, int) -> int
-    
-    Checks to see if the denominator is 0. 
-    If true, 0 is returned else return the division of the two integers.
-    
-    Precondition: len(s1) == len(s2)
-
-    >>> division_by_zero_check(1, 0)
-    0
-    >>> division_by_zero_check(2,1)
-    2
-    """
-    if denominator == 0:
-        return 0
-    else:
-        return numerator/denominator
-
-
 def exception_handling_text_element(text_element, driver):
     """
-    (string, virtual driver) -> string or integer
-    :param text_element:
-    :param driver:
-    :return:
+    (str, selenium.webdriver.chrome.webdriver.WebDriver) -> str
+
+    Checks to see if an exception was thrown when searching for a text formatted element. If no exception was found
+    then return text element, else return 0.
+
+    >>> find_element_by_xpath('//*[@id="tab-profitability"]/table[1]/tbody/tr[6]/td[10]', driver)
+    Most recent Gross Margin data
+    >>> find_element_by_xpath('//*[@id="financials"]/table/tbody/tr[10]/td[10]', driver)
+    Most recent Net Income data
     """
     try:
         return driver.find_element_by_xpath(text_element).text
@@ -219,6 +204,17 @@ def exception_handling_text_element(text_element, driver):
 
 
 def exception_handling_raw_element(raw_element, driver):
+    """
+    (str, selenium.webdriver.chrome.webdriver.WebDriver) -> str
+
+    Checks to see if an exception was thrown when searching for a raw formatted element. If no exception was thrown
+    then return raw element, else return zero.
+
+    >>> find_element_by_xpath('//*[@id="data_i1"]/div[@id="Y_5"]', driver)
+    Most Recent Revenue
+    >>> find_element_by_xpath('//*[@id="data_ttg1"]/div[@id="Y_5"]', driver))
+    Most Recent Total Current Assets
+    """
     try:
         return driver.find_element_by_xpath(raw_element).get_attribute("rawvalue")
     except NoSuchElementException:
@@ -235,32 +231,97 @@ def float_converter(xpath_to_data):
         return float(xpath_to_data.replace(",", ""))
 
 
+def division_by_zero_check(numerator, denominator):
+    """
+    (float, float) -> float
+
+    Checks to see if the denominator is 0. If true, 0 is returned else return the division of numerator and denominator.
+
+    >>> division_by_zero_check(1, 0)
+    0
+    >>> division_by_zero_check(2,1)
+    2
+    """
+    if denominator == 0:
+        return 0
+    else:
+        return numerator / denominator
+
+
 def human_like_click(driver, wait, click_xpath):
+    """
+    (selenium.webdriver.chrome.webdriver.WebDriver, selenium.webdriver.support.wait.WebDriverWait, str) -> None
+
+    Waits for the location where the next click is going to take place to appear and then clicks that location.
+
+    >>> human_like_click(driver, wait, '//*[@id="keyStatWrap"]/div/ul/li[5]/a')
+    None
+    >>> human_like_click(driver, wait, '/html/body/div[1]/div[3]/div[1]/div/ul[2]/li[6]/a')
+    None
+    """
     try:
+        #wait.until's for the click location to load
         wait.until(EC.presence_of_element_located((By.XPATH, click_xpath)))
         wait.until(EC.visibility_of_element_located((By.XPATH, click_xpath)))
         wait.until(EC.element_to_be_clickable((By.XPATH, click_xpath)))
+        #sends an enter (click) on a desired location on a given webpage.
         driver.find_element_by_xpath(click_xpath).send_keys("\n")
+        #wait.until for the next page to load.
         wait.until(EC.title_contains("from Morningstar.com"))
     except Exception as e:
         logger.error("Something bad happened when hitting morningstar: {name} - {error} - %{num}d"
                      .format(error=e, name="Jamison",num=20))
 
 
-def sign_check(pos_neg):
-    if pos_neg > 0:
+def sign_check(pos_or_neg):
+    """
+    (float) -> int
+
+    Checks to see if pos_or_neg is great than 0. If yes, returns a 1 else returns 0.
+
+    >>> 2.0
+    1
+    >>> -1.0
+    0
+    """
+    if pos_or_neg > 0:
         return 1
     else:
         return 0
 
 
 def csv_creator(url_link, header_setting):
+    """
+    (str, bool) -> None
+
+    converts a csv url into a csv file
+
+    >>> csv_creator("http://www.nasdaq.com/screening/companies-by-name.aspx?letter=0&exchange=nyse&render=
+                    download",True)
+    None
+    >>> csv_creator("http://www.nasdaq.com/screening/companies-by-name.aspx?letter=0&exchange=nyse&render=
+                    download",False)
+    None
+    """
+    #creates a dataframe that contains the url_link provided to the function
     df = pd.read_csv(urlread_keep_trying(url_link))
+    #creates stocklist.csv. If header_setting is true then a header will be created titled "Symbol" else, no header.
     df.to_csv('stocklist.csv', columns=['Symbol'], sep=',', index=False, mode='a',
               header=header_setting, index_label='Symbol')
 
 
 def urlread_keep_trying(url):
+    """
+    (str) -> None
+
+    uses urlopen to access a given url and error handles any exception encountered.
+    Tries again 3 times if exceptions are met.
+
+    >>> urlread_keep_trying("http://www.nasdaq.com/screening/companies-by-name.aspx?letter=0&exchange=amax&render=download")
+    None
+    >>> urlread_keep_trying("http://www.nasdaq.com/screening/companies-by-name.aspx?letter=0&exchange=nyse&render=download")
+    None
+    """
     for i in range(3):
         try:
             return urlopen(url)

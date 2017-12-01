@@ -25,25 +25,41 @@ def main():
     if os.path.exists("fscore.csv"):
         os.remove("fscore.csv")
         logging.info("Delete Success")
+    #gathers AMAX specific stock list
     #csv_creator("http://www.nasdaq.com/screening/companies-by-name.aspx?letter=0&exchange=amax&render=download",True)
-    csv_creator("http://www.nasdaq.com/screening/companies-by-name.aspx?letter=0&exchange=nyse&render=download",True)
-    #csv_creator("http://www.nasdaq.com/screening/companies-by-name.aspx?letter=0&exchange=nasdaq&render=download",True)
+    #gathers NYSE specific stock list
+    #csv_creator("http://www.nasdaq.com/screening/companies-by-name.aspx?letter=0&exchange=nyse&render=download",True)
+    #gathers NASDAQ specific stock list
+    csv_creator("http://www.nasdaq.com/screening/companies-by-name.aspx?letter=0&exchange=nasdaq&render=download",True)
+    #creates a dataframe containing the stocklist.csv created in the csv_creator function above
     df = pd.read_csv('stocklist.csv')
+    #creates a new dataframe containing only the symbol column and associated rows
     df_new = df[~df['Symbol'].str.contains('\w+\W')]
+    #creates an appendable csv file that contains two columns, Symbol from the previous line and a new F_Score column
     df_new.to_csv('fscore.csv', columns=['Symbol','F_Score'], index=True, mode='a', header=None)
-    df_fscore = pd.read_csv('fscore.csv', names=['Symbol', 'F_Score'], nrows=1)
+    #creates a new dataframe that contains the fscore.csv file
+    df_fscore = pd.read_csv('fscore.csv', names=['Symbol', 'F_Score'], nrows=2)
+    #creates an empty list that will be used for storing the collected f score information for each stock
     temp = []
+    #initialize webdriver
     driver = init_driver('/home/jonsnow/my_stockproject/chromedriver-Linux64')
+    #iterate through the number of rows in the df_fscore dataframe
     for index, row in df_fscore.iterrows():
         # Change Chrome Driver Path as Needed
         # Ubunto Users (see tytus's comments):
         # https://stackoverflow.com/questions/22476112/using-chromedriver-with-selenium-python-ubuntu
         logging.info(index)
         logging.info(row)
-        temp.append([df.iloc[index,0], parse(driver, df.iloc[index,0])])
+        #appends the stock ticker and f score calculated from the parse function
+        #parse() receives the webdriver and the stock ticker for the given row iteration via .iloc
+        temp.append([df_fscore.iloc[index,0], parse(driver, df_fscore.iloc[index,0])])
     driver.close()
+    #creates a dataframe using the nested list that was created in the for loop above
     df = pd.DataFrame(temp, columns=['Symbol', 'fscore'])
+    #stores the created dataframe in fscore.csv overwriting the previous made file. Uses sep='\t' to separate the two
+    #columns
     df.to_csv('fscore.csv', index=False, sep='\t')
+    #signals the end of the code eliciting screams of triumph
     logging.info("fin")
 
 """
@@ -95,67 +111,81 @@ def parse(driver, stock):
     if driver.current_url == 'http://www.morningstar.com/back_soon.html':
         return 0
     else:
-        #Net Income
+        #retrieves most recent reported net income
         recent_net_income = float_converter(exception_handling_text_element('//*[@id="financials"]'
-                                                                    '/table/tbody/tr[10]/td[10]', driver))
+                                                                            '/table/tbody/tr[10]/td[10]', driver))
+        #retrieves previous years reported net income
         previous_net_income = float_converter(exception_handling_text_element('//*[@id="financials"]'
-                                                                      '/table/tbody/tr[10]/td[9]', driver))
-        #Shares
+                                                                              '/table/tbody/tr[10]/td[9]', driver))
+        #retrieves most recent reported shares
         recent_shares = float_converter(exception_handling_text_element('//*[@id="financials"]'
-                                                                '/table/tbody/tr[18]/td[10]', driver))
+                                                                        '/table/tbody/tr[18]/td[10]', driver))
+        #retrieves previous years reported shares
         previous_shares = float_converter(exception_handling_text_element('//*[@id="financials"]'
-                                                                  '/table/tbody/tr[18]/td[9]', driver))
-        #Gross Margon
+                                                                          '/table/tbody/tr[18]/td[9]', driver))
+        #retrieves most recent reported gross margin
         recent_gross_margin = float_converter(exception_handling_text_element('//*[@id="tab-profitability"]'
-                                                                      '/table[1]/tbody/tr[6]/td[10]', driver))
+                                                                              '/table[1]/tbody/tr[6]/td[10]', driver))
+        #retrieves previous years reported gross margin
         previous_gross_margin = float_converter(exception_handling_text_element('//*[@id="tab-profitability"]'
-                                                                        '/table[1]/tbody/tr[6]/td[9]', driver))
-        #Efficiency turnover tab
+                                                                                '/table[1]/tbody/tr[6]/td[9]', driver))
+        '''
+        #clicks on efficiency turnover tab
         human_like_click(driver, wait, '//*[@id="keyStatWrap"]/div/ul/li[5]/a')
-        #Asset Turnover
+        #retrieves most recent asset turnover
         recent_asset_turnover = float_converter(exception_handling_text_element('//*[@id="tab-efficiency"]'
                                                                         '/table/tbody/tr[16]/td[10]', driver))
+        #retrieves previous years asset turnover
         previous_asset_turnover = float_converter(exception_handling_text_element('//*[@id="tab-efficiency"]'
                                                                           '/table/tbody/tr[16]/td[9]', driver))
-        #Financials Page > Income Statement
+        '''
+        #clicks on the financials page which takes you to the income statement
         human_like_click(driver, wait, '/html/body/div[1]/div[3]/div[1]/div/ul[2]/li[6]/a')
 
-        #Revenue
+        #retrieves the most recent reported revenue
         recent_revenue = float_converter(exception_handling_raw_element('//*[@id="data_i1"]'
-                                                                '/div[@id="Y_5"]', driver))
+                                                                        '/div[@id="Y_5"]', driver))
+        #retrieves previous years reported revenue
         previous_revenue = float_converter(exception_handling_raw_element('//*[@id="data_i1"]'
-                                                                  '/div[@id="Y_4"]', driver))
-        #Financials Page > Balance Sheet
+                                                                          '/div[@id="Y_4"]', driver))
+        #clicks on the balance sheet page
         human_like_click(driver, wait, '/html/body/div[1]/div[3]/div[1]/div[1]/div/ul[3]/li[2]/a')
-        #Total Current Assets
+        #retrieves most recent reported total current assets
         recent_tot_current_assets = float_converter(exception_handling_raw_element('//*[@id="data_ttg1"]'
-                                                                           '/div[@id="Y_5"]', driver))
+                                                                                   '/div[@id="Y_5"]', driver))
+        #retrives last years reported total current assets
         previous_tot_current_assets = float_converter(exception_handling_raw_element('//*[@id="data_ttg1"]'
-                                                                             '/div[@id="Y_4"]', driver))
-        #Total Assets
+                                                                                     '/div[@id="Y_4"]', driver))
+        #retrieves most recent reported total assets
         recent_total_assets = float_converter(exception_handling_raw_element('//*[@id="data_tts1"]'
                                                                              '/div[@id="Y_5"]', driver))
+        #retrieves previous years reported total assets
         previous_total_assets = float_converter(exception_handling_raw_element('//*[@id="data_tts1"]'
                                                                                '/div[@id="Y_4"]', driver))
+        #retrieves previous years previous reported total assets
         previous_previous_total_assets = float_converter(exception_handling_raw_element('//*[@id="data_tts1"]'
-                                                                                '/div[@id="Y_3"]', driver))
-
-        #Total Current Liabilities
+                                                                                        '/div[@id="Y_3"]', driver))
+        #retrieves most recent reported total current liabilities
         recent_total_current_liabilities = float_converter(exception_handling_raw_element('//*[@id="data_ttgg5"]'
-                                                                                  '/div[@id="Y_5"]', driver))
+                                                                                          '/div[@id="Y_5"]', driver))
+        #retrieves previous years reported total current liabilities
         previous_total_current_liabilities = float_converter(exception_handling_raw_element('//*[@id="data_ttgg5"]'
-                                                                                    '/div[@id="Y_4"]', driver))
-        #Total Liabilities
+                                                                                            '/div[@id="Y_4"]', driver))
+        #retrieves most recent reported total liabilities
         recent_long_term_debt = float_converter(exception_handling_raw_element('//*[@id="data_i50"]'
                                                                                '/div[@id="Y_5"]', driver))
+        #retrieves previous years reported total liabilities
         previous_long_term_debt = float_converter(exception_handling_raw_element('//*[@id="data_i50"]'
                                                                                  '/div[@id="Y_4"]', driver))
-        # Financials Page > Cash Flow
+        #clicks on the cash flow page
         human_like_click(driver, wait, '/html/body/div[1]/div[3]/div[1]/div[1]/div/ul[3]/li[3]/a')
-        #Cash Provided by Operations
+        #retrieves most recent reported operating cash flow
         recent_operating_cash_flow = float_converter(exception_handling_raw_element('//*[@id="data_tts1"]'
-                                                                            '/div[@id="Y_6"]', driver))
-        #The following code goes through the math to calculate Piotroski's F Score
+                                                                                    '/div[@id="Y_6"]', driver))
+        """
+        The rest of this function calculates Piotroski's F-Score (a value out of 9, see the readme for this code for more
+        info)
+        """
         f_score = []
         recent_avg_total_assets = (recent_total_assets + previous_total_assets) / 2
         previous_avg_total_assets = (previous_total_assets + previous_previous_total_assets) / 2

@@ -58,10 +58,9 @@ F_ACCRUAL:
                  driven by positive acrrual adjustments (profits are greater than cash flow 
                  from operations) is a bad signal about future profitability and returns.
                  
-        Defintion: ACCRUAL is the current year's net income before extraordinary items less 
-                   cash flow from operations, scaled by beginning of the year total assets.
+        Defintion: ACCRUAL is the current year's net income before extraordinary items less cash flow from operations, scaled by beginning of the year total assets.
         
-                   F_ACCRUAL equals one if CFO > 1, zero otherwise.
+                   F_ACCRUAL equals one if ACCRUAL < 0, zero otherwise.
                    
         Morning Star: Financials > Income Statement > Total Operating Expenses > Net Income
                       Financials > Balance Sheet > Total Assets
@@ -75,7 +74,7 @@ F_DeltaMargin:
             Definition: DeltaMargin is the firm's current gross margin ratio (gross margin scaled 
                         by total sales) less the prior year's gross margin ratio.
             
-                        Delta Margin equals pone if delta margin is positive, zero otherwise.
+                        F_DeltaMargin equals one if DeltaMargin is positive, zero otherwise.
                         
             Morning Star: Key Ratios > Profitability > Gross Margin
             
@@ -89,7 +88,7 @@ F_DeltaTurn:
         Defintion: The Firm's current year asset turnover ratio (total sales scaled by beginning 
                    of the year total assets) less the prior year's asset turnover ratio.
         
-                   DeltaTurn equals one if DeltaTurn is positive, zero otherwise.
+                   F_DeltaTurn equals one if DeltaTurn is positive, zero otherwise.
                    
         Morning Star: Key Ratios > Efficiency Ratios > Asset Turnover
         

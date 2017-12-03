@@ -28,9 +28,9 @@ def main():
     #gathers AMAX specific stock list
     #csv_creator("http://www.nasdaq.com/screening/companies-by-name.aspx?letter=0&exchange=amax&render=download",True)
     #gathers NYSE specific stock list
-    #csv_creator("http://www.nasdaq.com/screening/companies-by-name.aspx?letter=0&exchange=nyse&render=download",True)
+    csv_creator("http://www.nasdaq.com/screening/companies-by-name.aspx?letter=0&exchange=nyse&render=download",True)
     #gathers NASDAQ specific stock list
-    csv_creator("http://www.nasdaq.com/screening/companies-by-name.aspx?letter=0&exchange=nasdaq&render=download",True)
+    #csv_creator("http://www.nasdaq.com/screening/companies-by-name.aspx?letter=0&exchange=nasdaq&render=download",True)
     #creates a dataframe containing the stocklist.csv created in the csv_creator function above
     df = pd.read_csv('stocklist.csv')
     #creates a new dataframe containing only the symbol column and associated rows
@@ -42,7 +42,7 @@ def main():
     #creates an empty list that will be used for storing the collected f score information for each stock
     temp = []
     #initialize webdriver
-    driver = init_driver('/home/jonsnow/my_stockproject/chromedriver-Linux64')
+    driver = init_driver('/home/jonsnow/piotroski_env/chromedriver-Linux64')
     #iterate through the number of rows in the df_fscore dataframe
     for index, row in df_fscore.iterrows():
         # Change Chrome Driver Path as Needed

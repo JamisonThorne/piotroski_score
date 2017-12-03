@@ -1,4 +1,59 @@
-# stock_project
+# piotroski_score
+
+I have not tested to program on any OS except Linux Ubuntu
+
+Here are some helpful steps to get you started for running this program:
+
+Steps for running this program in Linux Ubunto:
+
+Note: The following program uses Python 3.6
+
+Create a virtual environment (I use virtualenv):
+
+Installs virtualenv:
+
+	pip install virtualenv
+
+Create virtual environment directory:
+
+	virtualenv -p python3 ~/piotroski_env
+
+Activate virtual env:
+
+	source ~/piotroski_env/bin/activate
+
+Installing git:
+
+	sudo apt-get install git-all
+
+Create a clone of repository from Github onto computer:
+
+	git clone https://github.com/lastfermat/piotroski_score
+
+Install requirements.txt file in virtual environment:
+
+	pip install -r requirements.txt
+
+list tells you the modules installed on the virtual environment you activated
+
+	pip list
+
+Change line 45 to match the chromedriver location on your personal computer (working on automating this step) should be located
+in the virtual environment directory you created above
+
+You can choose to run this program through the entire stock list which should take around 6 hours or you can run a specified number of rows.
+To do this look at line 41. The nrows=x where x can be set to any number of rows you wish to see for stock output. If you remove nrows=x then the program will run through the entire stock list.
+
+Run Program:
+
+	python piotroski_score.py
+
+Look at results:
+
+	libreoffice fscore.csv &
+
+
+
 
 Note: This program can be made more efficient by using the morningstar API. For learning purposes, I am using chrome driver instead.
 

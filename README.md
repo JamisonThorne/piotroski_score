@@ -59,10 +59,9 @@ Note: This program can be made more efficient by using the morningstar API. For 
 
 This is a program calculates the F-Score 'Piotroski Score' for all active stocks on the AMAX, NASDAQ, and NYSE.
 
-F_Score = F_ROA + F_DeltaROA + F_CFO + F_ACCRUAL + F_DeltaMargin + 
-      F_DeltaTurn + F_DeltaLever + F_DeltaLiquid + EQ_OFFER
-
 https://www.chicagobooth.edu/~/media/FE874EE65F624AAEBD0166B1974FD74D.pdf
+
+PROFITABILITY
 
 F_ROA:
     Purpose: Current Profitability and Cash flow realizations provide information about the firm's ability to generate 
@@ -75,7 +74,7 @@ F_ROA:
                 F_ROA equals 1 if the firm ROA is positive, 
                 zero otherwise.
     
-    Morning Star: Financials > Income Statement > Total Operating Expenses > Net Income
+    Morning Star: Key Ratios > Net Income
                   Financials > Balance Sheet > Total Assets
                   
     Equations: Return on Assets = Net Income (This Year) / Total Assets (This Year)
@@ -90,11 +89,11 @@ F_DeltaROA:
         
                     F_DeltaROA equals 1 if DeltaROA is positive, otherwise 0.
                     
-        Morning Star: Financials > Income Statement > Total Operating Expenses > Net Income
+        Morning Star: Key Ratios > Net Income
                       Financials > Balance Sheet > Total Assets
                       
         Equation: DeltaROA = ROA (This Year) - ROA (Last Year)
-F_CFO:
+F_CFOROA:
     Purpose: Current Profitability and Cash flow realizations provide information about the firm's ability to generate 
              funds internally. Given the poor historical earnings performance of value firms, 
              any firm currently generating positive cash flow or profits is demonstrating a 
@@ -108,48 +107,25 @@ F_CFO:
                   Financials > Balance Sheet > Total Assets 
 
     Equation: CFO = Operating Cash Flow (This Year) / Total Assets (This Year)
+
 F_ACCRUAL:
         Purpose: To include the relationship between earnings and cash flow levels. Earnings 
                  driven by positive acrrual adjustments (profits are greater than cash flow 
                  from operations) is a bad signal about future profitability and returns.
                  
         Defintion: ACCRUAL is the current year's net income before extraordinary items less cash flow from operations, scaled by beginning of the year total assets.
+
+Note: I changed the equation around in my calculation to the equivalent: CFO - NI where:
         
-                   F_ACCRUAL equals one if ACCRUAL < 0, zero otherwise.
+                   F_ACCRUAL equals one if ACCRUAL > 0, zero otherwise.
                    
-        Morning Star: Financials > Income Statement > Total Operating Expenses > Net Income
-                      Financials > Balance Sheet > Total Assets
+        Morning Star: Key Ratios > Net Income
                       Key Ratios > Financials > Operating Cash Flow (USD Mil)
         
-        Equations: ACCRUAL = ROA(current year) - CFO(current year)
-F_DeltaMargin:
-            Purpose: Improvement in margins signifies a potential improvement in factor costs, 
-                     a reduction in inventory costs, or a rise in the price of the firm's product.
-                     
-            Definition: DeltaMargin is the firm's current gross margin ratio (gross margin scaled 
-                        by total sales) less the prior year's gross margin ratio.
-            
-                        F_DeltaMargin equals one if DeltaMargin is positive, zero otherwise.
-                        
-            Morning Star: Key Ratios > Profitability > Gross Margin
-            
-            Equations: DeltaMargin = Gross Margin Ratio (This Year) - Gross Margin Ratio (Previous Year)
-F_DeltaTurn:
-        Purpose: An improvement in asset turnover signifies greater productivity from the 
-                 asset base. Such an improvement can arise from more efficient operations 
-                 (fewer assets generating the same levels of sales) or an icnrease in sales 
-                 (which could also signify improved market conditions for the firm's products).
-         
-        Defintion: The Firm's current year asset turnover ratio (total sales scaled by beginning 
-                   of the year total assets) less the prior year's asset turnover ratio.
-        
-                   F_DeltaTurn equals one if DeltaTurn is positive, zero otherwise.
-                   
-        Morning Star: Key Ratios > Efficiency Ratios > Asset Turnover
-        
-        Equations: Asset Turnover = Net Sales / Average Total Assets
-                   Average Total Assets = (Total Assets (this year) + Total Assets (previous year)) / 2 
-                   DeltaTurn = Asset Turnover (This Year) - Asset Turnover (Last Year)
+        Equations: ACCRUAL = CFO (current year) - Net Income (current year)
+
+FUNDING
+
 F_DeltaLever:
             Purpose: By raising external capital, a financially distressed firm is 
                      signaling its inability to generate sufficient internal funds. 
@@ -158,16 +134,14 @@ F_DeltaLever:
             
             Definition: Captures changes in firm's long-term debt levels.
             
-                        F_DeltaLever equals one (zero) if the 
-                        firm's leverage ratio fell (rose) in the year proceding portfolio 
-                        formation.
+                        F_DeltaLever equals 1 if DeltaLever is positive, else 0.
                         
-            Morning Star: Financials > Balance Sheet > Total Liabilities
-                          Financials > Balance Sheet > Total Assets
+            Morning Star: Key Ratios > Financial Health Tab > Debt/Equity
                         
-            Equations: Average Total Assets = (Total Assets (This Year) + Total Assets (Last Year)) / 2              
-                       Leverage = Total Liabilities / Average total assets
-                       DeltaLever = Leverage (This Year) - Leverage (Last Year)
+            Equations: Leverage or Gearing (debt/equity) = Total Liabilities / Average total assets
+                       DeltaLever = Leverage (Last Year) - Leverage (This Year)
+
+
 F_DeltaLiquid:
             Purpose: Piotroski assumes that an improvement in liquidty is a good 
                      signal about the firm's ability to service current debt obligations
@@ -184,8 +158,10 @@ F_DeltaLiquid:
                           Financials > Balance Sheet > Total Current Assets
                 
             Equations: Current Ratio = Total Current Assets / Total Current Liabilities
-                       DeltaLiquid = Current Ratio (This Year) - Current Ratio (Last Year)      
-EQ_OFFER:   
+                       DeltaLiquid = Current Ratio (This Year) - Current Ratio (Last Year)
+
+
+EQ_OFFER:
         Purpose: Similar to an increase in long-term debt, financially distressed 
                   firms that raise external capital could be signaling their inability 
                   to generate sufficient interal funds to service future obligations.
@@ -196,3 +172,40 @@ EQ_OFFER:
          Morning Star: Key Ratios > Shares
      
         Equations: EQ_OFFER = Compare Issued Shares (This Year) to Issued Shares (Last Year)
+
+
+EFFICIENCY
+
+Note: To go quarterly just pull TTM and the previous year off the key ratios page from morningstar
+
+F_DeltaMargin:
+            Purpose: Improvement in margins signifies a potential improvement in factor costs, 
+                     a reduction in inventory costs, or a rise in the price of the firm's product.
+                     
+            Definition: DeltaMargin is the firm's current gross margin ratio (gross margin scaled 
+                        by total sales) less the prior year's gross margin ratio.
+            
+                        F_DeltaMargin equals one if DeltaMargin is positive, zero otherwise.
+                        
+            Morning Star: Key Ratios > Profitability Tab > Gross Margin
+            
+            Equations: DeltaMargin = Gross Margin Ratio (This Year) - Gross Margin Ratio (Previous Year)
+
+F_DeltaTurn:
+        Purpose: An improvement in asset turnover signifies greater productivity from the 
+                 asset base. Such an improvement can arise from more efficient operations 
+                 (fewer assets generating the same levels of sales) or an icnrease in sales 
+                 (which could also signify improved market conditions for the firm's products).
+         
+        Defintion: The Firm's current year asset turnover ratio (total sales scaled by beginning 
+                   of the year total assets) less the prior year's asset turnover ratio.
+        
+                   F_DeltaTurn equals one if DeltaTurn is positive, zero otherwise.
+                   
+        Morning Star: Key Ratios > Efficiency Ratios > Asset Turnover
+        
+        Equations: Asset Turnover = Revenue / Average Total Assets
+                   Average Total Assets = (Total Assets (this year) + Total Assets (previous year)) / 2 
+                   DeltaTurn = Asset Turnover (This Year) - Asset Turnover (Last Year)
+
+F_Score = F_ROA + F_DeltaROA + F_CFOROA + F_ACCRUAL + F_DeltaMargin + F_DeltaTurn + F_DeltaLever + F_DeltaLiquid + EQ_OFFER

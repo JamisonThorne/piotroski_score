@@ -1,12 +1,14 @@
 import logging
 import argparse
 from selenium import webdriver
+import chromedriver_binary #adds chromedriver to path
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.chrome.options import Options
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.by import By
+import http.client
 import time
 import pandas as pd
 from urllib.request import urlopen
@@ -17,7 +19,7 @@ import os.path
 def main():
     args = parse_args()
     logging.basicConfig(format='%(asctime)s - %(name)s : %(levelname)s - %(lineno)d: %(message)s',
-                        level=logging.DEBUG if args.verbose else logging.INFO)
+                        level=logging.DEBUG if args.verbose else logging.DEBUG)
     global logger
     logger = logging.getLogger("webscraper")
     if os.path.exists("stocklist.csv"):
@@ -26,9 +28,9 @@ def main():
         os.remove("fscore.csv")
         logging.info("Delete Success")
     #gathers AMAX specific stock list
-    #csv_creator("http://www.nasdaq.com/screening/companies-by-name.aspx?letter=0&exchange=amax&render=download",True)
+    csv_creator("http://www.nasdaq.com/screening/companies-by-name.aspx?letter=0&exchange=amax&render=download",True)
     #gathers NYSE specific stock list
-    csv_creator("http://www.nasdaq.com/screening/companies-by-name.aspx?letter=0&exchange=nyse&render=download",True)
+    #csv_creator("http://www.nasdaq.com/screening/companies-by-name.aspx?letter=0&exchange=nyse&render=download",True)
     #gathers NASDAQ specific stock list
     #csv_creator("http://www.nasdaq.com/screening/companies-by-name.aspx?letter=0&exchange=nasdaq&render=download",True)
     #creates a dataframe containing the stocklist.csv created in the csv_creator function above
@@ -38,11 +40,16 @@ def main():
     #creates an appendable csv file that contains two columns, Symbol from the previous line and a new F_Score column
     df_new.to_csv('fscore.csv', columns=['Symbol','F_Score'], index=True, mode='a', header=None)
     #creates a new dataframe that contains the fscore.csv file
-    df_fscore = pd.read_csv('fscore.csv', names=['Symbol', 'F_Score'], nrows=2)
+
+    #selects first ten stocks
+    #df_fscore = pd.read_csv('fscore.csv', names=['Symbol', 'F_Score'], nrows=10)
+    #selects all stocks
+    df_fscore = pd.read_csv('fscore.csv', names=['Symbol', 'F_Score'])
+
     #creates an empty list that will be used for storing the collected f score information for each stock
     temp = []
     #initialize webdriver
-    driver = init_driver('/home/jonsnow/piotroski_env/chromedriver-Linux64')
+    driver = init_driver()
     #iterate through the number of rows in the df_fscore dataframe
     for index, row in df_fscore.iterrows():
         # Change Chrome Driver Path as Needed
@@ -70,16 +77,17 @@ creates the selenium webdriver that this code will navigate through.
 >>> init_driver('/home/jonsnow/my_stockproject/chromedriver-Linux64')
 selenium.webdriver.chrome.webdriver.WebDriver (session="unique crumb")
 """
-def init_driver(web_driver_location):
+def init_driver():
     options = Options()
     #maximizes the webdriver screen so that the entire webpage can be searched and clicked on.
     options.add_argument("--start-maximized")
     options.add_argument('--dns-prefetch-disable')
-    driver = webdriver.Chrome(executable_path=web_driver_location, chrome_options=options)
+    driver = webdriver.Chrome(chrome_options=options)
     driver.wait = WebDriverWait(driver, 30)
     return driver
 
 """
+UPDATE
 Parse command line arguments
 """
 def parse_args():
@@ -246,7 +254,6 @@ def exception_handling_text_element(text_element, driver):
     except NoSuchElementException:
         return 0
 
-
 """
 exception_handling_raw_element(str, selenium.webdriver.chrome.webdriver.WebDriver) -> str
 
@@ -263,6 +270,8 @@ def exception_handling_raw_element(raw_element, driver):
         return driver.find_element_by_xpath(raw_element).get_attribute("rawvalue")
     except NoSuchElementException:
         return 0
+    except  http.client.HTTPException:
+        return("HTTPException")
 
 """
 float_converter(str) -> float
@@ -322,9 +331,12 @@ def human_like_click(driver, wait, click_xpath):
         wait.until(EC.visibility_of_element_located((By.XPATH, click_xpath)))
         wait.until(EC.element_to_be_clickable((By.XPATH, click_xpath)))
         #sends an enter (click) on a desired location on a given webpage.
-        driver.find_element_by_xpath(click_xpath).send_keys("\n")
+        wait.find_element_by_xpath(click_xpath).send_keys("\n")
         #wait.until for the next page to load.
         wait.until(EC.title_contains("from Morningstar.com"))
+        driver.implicitly_wait(10)
+    except  http.client.HTTPException:
+        return("HTTPException")
     except Exception as e:
         logger.error("Something bad happened when hitting morningstar: {name} - {error} - %{num}d"
                      .format(error=e, name="Jamison",num=20))
@@ -382,6 +394,8 @@ def urlread_keep_trying(url):
     for i in range(3):
         try:
             return urlopen(url)
+        except  http.client.HTTPException as e:
+            return ("HTTPException")
         except urllib.error.HTTPError as error:
             if error.code in (403, 404):
                 raise

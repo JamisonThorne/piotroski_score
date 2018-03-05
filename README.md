@@ -1,6 +1,6 @@
 # piotroski_score
 
-I have not tested to program on any OS except Linux Ubuntu
+I have not tested this program on any OS except Linux Ubuntu
 
 Here are some helpful steps to get you started for running this program:
 
@@ -34,15 +34,7 @@ Install requirements.txt file in virtual environment:
 
 	pip install -r requirements.txt
 
-list tells you the modules installed on the virtual environment you activated
-
-	pip list
-
-Change line 45 to match the chromedriver location on your personal computer (working on automating this step) should be located
-in the virtual environment directory you created above
-
-You can choose to run this program through the entire stock list which should take around 6 hours or you can run a specified number of rows.
-To do this look at line 41. The nrows=x where x can be set to any number of rows you wish to see for stock output. If you remove nrows=x then the program will run through the entire stock list.
+You can choose to run this program through the entire stock list which should take around 6 hours or you can run a specified number of rows. No change is needed to run the program all the way through. To run the program through the first, say ten stocks uncomment line 45 and comment line 47.
 
 Run Program:
 
@@ -52,10 +44,7 @@ Look at results:
 
 	libreoffice fscore.csv &
 
-
-
-
-Note: This program can be made more efficient by using the morningstar API. For learning purposes, I am using chrome driver instead.
+Note: This program can be made more efficient by using the morningstar API. For learning purposes, I am using selenium's chromedriver instead.
 
 This is a program calculates the F-Score 'Piotroski Score' for all active stocks on the AMAX, NASDAQ, and NYSE.
 

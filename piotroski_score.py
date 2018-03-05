@@ -334,7 +334,6 @@ def human_like_click(driver, wait, click_xpath):
         wait.find_element_by_xpath(click_xpath).send_keys("\n")
         #wait.until for the next page to load.
         wait.until(EC.title_contains("from Morningstar.com"))
-        driver.implicitly_wait(10)
     except  http.client.HTTPException:
         return("HTTPException")
     except Exception as e:

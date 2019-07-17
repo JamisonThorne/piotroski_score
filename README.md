@@ -2,17 +2,19 @@
 
 I have not tested this program on any OS except Linux Ubuntu
 
-Here are some helpful steps to get you started for running this program:
+Things to install in order to run:
+
+Install virtualenv:
+
+	pip install virtualenv
+
+Installing git:
+
+	sudo apt-get install git-all
 
 Steps for running this program in Linux Ubunto:
 
-Note: The following program uses Python 3.6
-
-Create a virtual environment (I use virtualenv):
-
-Installs virtualenv:
-
-	pip install virtualenv
+Note: The following program uses Python 3.6.8
 
 Create virtual environment directory:
 
@@ -21,10 +23,6 @@ Create virtual environment directory:
 Activate virtual env:
 
 	source ~/piotroski_env/bin/activate
-
-Installing git:
-
-	sudo apt-get install git-all
 
 Create a clone of repository from Github onto computer:
 
@@ -46,7 +44,9 @@ Look at results:
 
 Note: This program can be made more efficient by using the morningstar API. For learning purposes, I am using selenium's chromedriver instead.
 
-This is a program calculates the F-Score 'Piotroski Score' for all active stocks on the AMAX, NASDAQ, and NYSE.
+This is program calculates the F-Score (Piotroski Score) for all active stocks on the AMAX, NASDAQ, and NYSE.
+
+Piotroski's research publication:
 
 https://www.chicagobooth.edu/~/media/FE874EE65F624AAEBD0166B1974FD74D.pdf
 
